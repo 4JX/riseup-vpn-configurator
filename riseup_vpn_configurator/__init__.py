@@ -24,15 +24,15 @@ FORMAT = "%(levelname)s: %(message)s"
 logging.basicConfig(format=FORMAT, level=logging.INFO)
 # logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-working_dir = Path("/opt/riseup-vpn")
+working_dir = Path(os.environ.get("RISEUP_WORKING_DIR", "/opt/riseup-vpn"))
 gateway_json = working_dir / Path("gateways.json")
 
 ca_cert_file = working_dir / Path("vpn-ca.pem")
 cert_file = working_dir / Path("cert.pem")
 key_file = working_dir / Path("key.pem")
 
-config_file = Path("/etc/riseup-vpn.yaml")
-ovpn_file = Path("/etc/openvpn/client/riseup.conf")
+config_file = Path(os.environ.get("RISEUP_CONFIG_FILE", "/etc/riseup-vpn.yaml"))
+ovpn_file = Path(os.environ.get("RISEUP_OVPN_FILE", "/etc/openvpn/client/riseup.conf"))
 
 GATEWAYS_API_URL = "https://api.black.riseup.net/3/config/eip-service.json"
 PROVIDER_API_URL = "https://riseup.net/provider.json"
@@ -391,7 +391,7 @@ def fix_file_permissions(file: Path) -> None:
 
 
 def print_default_config(return_code: int) -> NoReturn:
-    config_template = Path(__file__).parent / config_file.name
+    config_template = Path(__file__).parent / "riseup-vpn.yaml"
     print(config_template.read_text())
     sys.exit(return_code)
 

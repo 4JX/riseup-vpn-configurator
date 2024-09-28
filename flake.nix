@@ -15,6 +15,8 @@
       let
         # see https://github.com/nix-community/poetry2nix/tree/master#api for more functions and examples.
         pkgs = nixpkgs.legacyPackages.${system};
+        lib = nixpkgs.lib;
+
         inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; }) mkPoetryApplication;# mkPoetryEnv;
 
         # pythonEnv = mkPoetryEnv {
@@ -33,15 +35,28 @@
         #     nix develop
         #
         # Use this shell for developing your app.
-        devShells.default = pkgs.mkShell {
-          inputsFrom = [ self.packages.${system}.riseup-vpn-configurator ];
+        devShells.default =
+          let
+            envVars = [ "RISEUP_WORKING_DIR=./files" "RISEUP_CONFIG_FILE=./files/riseup-vpn.yaml" "RISEUP_OVPN_FILE=./files/riseup.ovpn" ];
+            shellVars = lib.concatStringsSep " " envVars;
+            exportShellVars = lib.concatStringsSep "\n" (map (e: "export ${e}") envVars);
+            sudoWithVars = pkgs.writeShellScriptBin "sudo-with-vars" ''sudo ${shellVars} $@'';
+          in
+          pkgs.mkShell {
+            inputsFrom = [ self.packages.${system}.riseup-vpn-configurator ];
 
-          # buildInputs = [ pythonEnv ];
-          packages = with pkgs; [
-            pylyzer
-            ruff
-          ];
-        };
+            # buildInputs = [ pythonEnv ];
+            packages = with pkgs; [
+              pylyzer
+              ruff
+              sudoWithVars
+            ];
+
+            shellHook = ''
+              echo ${shellVars}
+              ${exportShellVars}
+            '';
+          };
 
         # Shell for poetry.
         #
