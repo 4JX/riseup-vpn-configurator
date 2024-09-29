@@ -283,6 +283,7 @@ proto {{ server_info['proto'] }}
 verify-x509-name {{ server_info['hostname'].split(".")[0] }} name
 
 cipher AES-256-GCM
+auth SHA512
 tls-version-min 1.3
 
 resolv-retry infinite
